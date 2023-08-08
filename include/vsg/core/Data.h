@@ -104,6 +104,9 @@ namespace vsg
         value_type* operator->() { return reinterpret_cast<value_type*>(ptr); }
     };
 
+    class Data;
+    VSG_type_name(vsg::Data);
+
     /// Data base class for abstracting data such as values, vertices, images etc.
     /// Main subclasses are vsg::Value, vsg::Array, vsg::Array2D and vsg::Array3D.
     class VSG_DECLSPEC Data : public Object
@@ -150,7 +153,8 @@ namespace vsg
         static void operator delete(void* ptr);
 
         size_t sizeofObject() const noexcept override { return sizeof(Data); }
-        bool is_compatible(const std::type_info& type) const noexcept override { return typeid(Data) == type || Object::is_compatible(type); }
+        uint64_t type_hash() const noexcept override { return vsg::type_hash<Data>(); }
+        bool is_compatible(const uint64_t hash) const noexcept override { return type_hash() == hash || Object::is_compatible(hash); }
 
         int compare(const Object& rhs_object) const override;
 
@@ -235,7 +239,6 @@ namespace vsg
         Layout getLayout() const { return properties; }
 #endif
     };
-    VSG_type_name(vsg::Data);
 
     using DataList = std::vector<ref_ptr<Data>>;
 

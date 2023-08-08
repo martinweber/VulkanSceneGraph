@@ -14,6 +14,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <string>
 #include <typeinfo>
+#include <cstdint>
+
+namespace vsg::detail
+{
+    // compile time hashing code derived from https://github.com/elanthis/constexpr-hash-demo/blob/c59e42f4270c493494d504a0840425cd4d01e346/test.cpp
+    // NOTE: hashing algorithm used is FNV-1a (https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function)
+
+    // FNV-1a constants
+    static constexpr uint64_t basis = 14695981039346656037ULL;
+    static constexpr uint64_t prime = 1099511628211ULL;
+
+    // compile-time hash helper function
+    constexpr uint64_t hash_one(char c, const char* remain, uint64_t value)
+    {
+        return c == 0 ? value : hash_one(remain[0], remain + 1, (value ^ c) * prime);
+    }
+
+    // compile-time hash
+    constexpr uint64_t hash(const char* str)
+    {
+        return hash_one(str[0], str + 1, basis);
+    }
+} // namespace vsg::detail
 
 namespace vsg
 {
@@ -37,16 +60,23 @@ namespace vsg
     template<> constexpr const char* type_name<float>() noexcept { return "float"; }
     template<> constexpr const char* type_name<double>() noexcept { return "double"; }
 
+    template<typename T>
+    constexpr uint64_t type_hash() noexcept { return vsg::detail::hash(type_name<T>()); }
+
+    template<> constexpr uint64_t type_hash<char>() noexcept { return vsg::detail::hash("char"); }
+
     // helper define for defining the type_name() for a type within the vsg namespace.
     #define VSG_type_name(T) \
         template<> constexpr const char* type_name<T>() noexcept { return #T; } \
-        template<> constexpr const char* type_name<const T>() noexcept { return "const "#T; }
+        template<> constexpr const char* type_name<const T>() noexcept { return "const "#T; } \
+        template<> constexpr uint64_t type_hash<T>() noexcept { return vsg::detail::hash(#T); }
 
 
     // helper define for defining the type_name() for a type in a namespace other than vsg, note must be placed in global namespace.
     #define EVSG_type_name(T) \
         template<> constexpr const char* vsg::type_name<T>() noexcept { return #T; } \
-        template<> constexpr const char* vsg::type_name<const T>() noexcept { return "const "#T; }
+        template<> constexpr const char* vsg::type_name<const T>() noexcept { return "const "#T; } \
+        template<> constexpr uint64_t vsg::type_hash<T>() noexcept { return vsg::detail::hash(#T); }
 
     // clang-format on
 

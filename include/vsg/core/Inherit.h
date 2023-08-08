@@ -47,7 +47,8 @@ namespace vsg
         std::size_t sizeofObject() const noexcept override { return sizeof(Subclass); }
         const char* className() const noexcept override { return type_name<Subclass>(); }
         const std::type_info& type_info() const noexcept override { return typeid(Subclass); }
-        bool is_compatible(const std::type_info& type) const noexcept override { return typeid(Subclass) == type || ParentClass::is_compatible(type); }
+        uint64_t type_hash() const noexcept override { return vsg::type_hash<Subclass>(); }
+        bool is_compatible(const uint64_t hash) const noexcept override { return type_hash() == hash || ParentClass::is_compatible(hash); }
 
         int compare(const Object& rhs) const override
         {

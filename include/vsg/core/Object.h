@@ -65,13 +65,14 @@ namespace vsg
 
         /// return the std::type_info of this Object
         virtual const std::type_info& type_info() const noexcept { return typeid(Object); }
-        virtual bool is_compatible(const std::type_info& type) const noexcept { return typeid(Object) == type; }
+        virtual uint64_t type_hash() const noexcept { return vsg::type_hash<Object>(); }
+        virtual bool is_compatible(const uint64_t hash) const noexcept { return type_hash() == hash; }
 
         template<class T>
-        T* cast() { return is_compatible(typeid(T)) ? static_cast<T*>(this) : nullptr; }
+        T* cast() { return is_compatible(vsg::type_hash<T>()) ? static_cast<T*>(this) : nullptr; }
 
         template<class T>
-        const T* cast() const { return is_compatible(typeid(T)) ? static_cast<const T*>(this) : nullptr; }
+        const T* cast() const { return is_compatible(vsg::type_hash<T>()) ? static_cast<const T*>(this) : nullptr; }
 
         /// compare two objects, return -1 if this object is less than rhs, return 0 if it's equal, return 1 if rhs is greater,
         virtual int compare(const Object& rhs) const;

@@ -30,7 +30,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #define VSG_value(N, T) \
     using N = Value<T>; \
     template<>          \
-    constexpr const char* type_name<N>() noexcept { return "vsg::" #N; }
+    constexpr const char* type_name<N>() noexcept { return "vsg::" #N; } \
+    template<> constexpr uint64_t type_hash<N>() noexcept { return vsg::detail::hash("vsg::"#N); }
 
 namespace vsg
 {
@@ -65,7 +66,8 @@ namespace vsg
         size_t sizeofObject() const noexcept override { return sizeof(Value); }
         const char* className() const noexcept override { return type_name<Value>(); }
         const std::type_info& type_info() const noexcept override { return typeid(*this); }
-        bool is_compatible(const std::type_info& type) const noexcept override { return typeid(Value) == type || Data::is_compatible(type); }
+        uint64_t type_hash() const noexcept override { return vsg::type_hash<Value>(); }
+        bool is_compatible(const uint64_t hash) const noexcept override { return type_hash() == hash || Object::is_compatible(hash); }
 
         // implementation provided by Visitor.h
         void accept(Visitor& visitor) override;
